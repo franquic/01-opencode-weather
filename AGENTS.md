@@ -6,9 +6,13 @@
 - See `bun-instructions.md` for full Bun conventions.
 
 ## Project Structure
-- Entry point: `index.ts` (root, no `src/` directory).
+- Entry point: `index.ts` (root) — delegates to `src/app.ts`.
+- Source code: `src/` directory.
 - TypeScript with strict mode, `noEmit`, bundler module resolution (`tsconfig.json`).
-- Flat structure — keep it that way unless the app grows significantly.
+- `src/store.ts` — estado en memoria con persistencia lazy a `cities.json`.
+- `src/api.ts` — llamadas a OpenMeteo (geocoding + forecast).
+- `src/app.ts` — CLI, display, handlers y menú.
+- `src/types.ts` — interfaces TypeScript.
 
 ## App Purpose
 - CLI weather app using OpenMeteo API (free, no API key required).
