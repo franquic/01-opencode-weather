@@ -51,10 +51,10 @@ export class Store {
     this.save(this.settings)
   }
 
-  addCity(name: string, latitude: number, longitude: number, id: string): void {
-    this.settings.cities.push({ id, name, latitude, longitude })
+  addCity(city: City): void {
+    this.settings.cities.push(city)
     if (!this.settings.defaultCityId) {
-      this.settings.defaultCityId = id
+      this.settings.defaultCityId = city.id
     }
     this.save(this.settings)
   }

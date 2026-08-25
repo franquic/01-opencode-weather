@@ -3,6 +3,8 @@ export interface City {
   name: string
   latitude: number
   longitude: number
+  admin1?: string
+  country?: string
 }
 
 export type Unit = "celsius" | "fahrenheit"

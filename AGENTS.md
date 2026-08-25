@@ -30,5 +30,5 @@ bun run build         # compila binario (--compile --outfile weather)
 ```
 
 ## API Reference
-- Geocoding: `https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=es&format=json`
+- Geocoding: `https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=es&format=json` (devuelve hasta 5 resultados; el usuario elige uno de una lista numerada cuando hay varios).
 - Forecast: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m&temperature_unit={celsius|fahrenheit}`

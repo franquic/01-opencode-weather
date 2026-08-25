@@ -1,7 +1,7 @@
 import * as readline from "readline"
 import type { City, Unit, WeatherData } from "./types"
 import { Store } from "./store"
-import { geocodeCity, getWeather } from "./api"
+import { geocodeCities, getWeather } from "./api"
 import { cyan, yellow, green, red } from "./colors"
 
 const rl = readline.createInterface({
@@ -55,17 +55,30 @@ function renderWeather(data: WeatherData) {
   console.log(`\n  ${data.city}: ${yellow(`${data.temperature}${unitSymbol(data.unit)}`)}\n`)
 }
 
+function cityLabel(city: City): string {
+  const region = [city.admin1, city.country].filter(Boolean).join(", ")
+  return region ? `${city.name} (${region})` : city.name
+}
+
 function renderCityList(cities: City[], defaultCityId: string | null) {
   if (!cities.length) {
     console.log("\n  No hay ciudades registradas.\n")
     return
   }
   console.log("")
-  for (const city of cities) {
+  cities.forEach((city, index) => {
     const marker = city.id === defaultCityId ? " (default)" : ""
-    console.log(`  - ${city.name}${marker}`)
-  }
+    console.log(`  ${index + 1}. ${cityLabel(city)}${marker}`)
+  })
   console.log("")
+}
+
+async function selectCity(cities: City[]): Promise<City | null> {
+  renderCityList(cities, null)
+  const input = await ask("  Selecciona una ciudad (número): ")
+  const index = Number.parseInt(input, 10)
+  if (Number.isNaN(index) || index < 1 || index > cities.length) return null
+  return cities[index - 1] ?? null
 }
 
 function info(msg: string) {
@@ -103,32 +116,38 @@ async function handleAllWeather(store: Store) {
 
 async function handleAddCity(store: Store) {
   const name = await ask("  Nombre de la ciudad: ")
-  const city = await geocodeCity(name)
-  if (!city) return error("Ciudad no encontrada.")
-  store.addCity(city.name, city.latitude, city.longitude, city.id)
-  ok(`${city.name} agregada correctamente.`)
+  const results = await geocodeCities(name)
+  if (!results.length) return error("Ciudad no encontrada.")
+
+  let city: City | null
+  if (results.length === 1) {
+    city = results[0] ?? null
+  } else {
+    console.log(`\n  Se encontraron ${results.length} resultados:`)
+    city = await selectCity(results)
+  }
+  if (!city) return error("Selección no válida.")
+
+  store.addCity(city)
+  ok(`${cityLabel(city)} agregada correctamente.`)
 }
 
 async function handleRemoveCity(store: Store) {
   const cities = store.cities
   if (!cities.length) return error("No hay ciudades para eliminar.")
-  renderCityList(cities, store.defaultCityId)
-  const name = await ask("  Nombre de la ciudad a eliminar: ")
-  const city = cities.find((c) => c.name.toLowerCase() === name.toLowerCase())
-  if (!city) return error("Ciudad no encontrada.")
+  const city = await selectCity(cities)
+  if (!city) return error("Selección no válida.")
   store.removeCity(city.id)
-  ok(`${city.name} eliminada.`)
+  ok(`${cityLabel(city)} eliminada.`)
 }
 
 async function handleSetDefault(store: Store) {
   const cities = store.cities
   if (!cities.length) return error("No hay ciudades registradas.")
-  renderCityList(cities, store.defaultCityId)
-  const name = await ask("  Nombre de la ciudad default: ")
-  const city = cities.find((c) => c.name.toLowerCase() === name.toLowerCase())
-  if (!city) return error("Ciudad no encontrada.")
+  const city = await selectCity(cities)
+  if (!city) return error("Selección no válida.")
   store.setDefaultCity(city.id)
-  ok(`${city.name} establecida como ciudad default.`)
+  ok(`${cityLabel(city)} establecida como ciudad default.`)
 }
 
 async function handleSettings(store: Store) {
