@@ -1,8 +1,9 @@
 import * as readline from "readline"
-import type { City, Unit, WeatherData } from "./types"
+import type { City, ForecastData, Unit, WeatherData } from "./types"
 import { Store } from "./store"
-import { geocodeCities, getWeather } from "./api"
+import { geocodeCities, getForecast, getWeather } from "./api"
 import { cyan, yellow, green, red } from "./colors"
+import { describeWeatherCode } from "./wmo"
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -42,6 +43,7 @@ function renderHeader(unit: Unit) {
   console.log(cyan("    3. Buscar y agregar ciudad"))
   console.log(cyan("    4. Eliminar ciudad"))
   console.log(cyan("    5. Establecer ciudad default"))
+  console.log(cyan("    6. Predicción 7 días"))
   console.log(cyan(`    8. Ajustes (${unitSymbol(unit)})`))
   console.log(cyan("    9. Salir"))
   console.log(cyan(`  ${BORDER}`))
@@ -53,6 +55,24 @@ function unitSymbol(unit: Unit): string {
 
 function renderWeather(data: WeatherData) {
   console.log(`\n  ${data.city}: ${yellow(`${data.temperature}${unitSymbol(data.unit)}`)}\n`)
+}
+
+function formatForecastDate(date: string): string {
+  const parsed = new Date(`${date}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) return date
+  const weekday = new Intl.DateTimeFormat("es", { weekday: "short" }).format(parsed)
+  const dayMonth = new Intl.DateTimeFormat("es", { day: "2-digit", month: "2-digit" }).format(parsed)
+  return `${weekday} ${dayMonth}`
+}
+
+function renderForecast(data: ForecastData) {
+  console.log(`\n  ${data.city} — próximos ${data.days.length} días:`)
+  for (const day of data.days) {
+    const date = formatForecastDate(day.date).padEnd(14)
+    const temps = `${cyan(`${day.tempMin}${unitSymbol(data.unit)}`)} .. ${yellow(`${day.tempMax}${unitSymbol(data.unit)}`)}`
+    console.log(`    ${date} ${temps}  ${describeWeatherCode(day.weatherCode)}`)
+  }
+  console.log("")
 }
 
 function cityLabel(city: City): string {
@@ -110,6 +130,19 @@ async function handleAllWeather(store: Store) {
       renderWeather(weather)
     } else {
       error(`No se pudo obtener el clima de ${city.name}.`)
+    }
+  }
+}
+
+async function handleForecast(store: Store) {
+  const cities = store.cities
+  if (!cities.length) return info("No hay ciudades registradas.")
+  for (const city of cities) {
+    const forecast = await getForecast(city, store.unit)
+    if (forecast) {
+      renderForecast(forecast)
+    } else {
+      error(`No se pudo obtener la predicción de ${city.name}.`)
     }
   }
 }
@@ -182,6 +215,9 @@ export async function startMenu(store: Store) {
         break
       case "5":
         await handleSetDefault(store)
+        break
+      case "6":
+        await handleForecast(store)
         break
       case "8":
         await handleSettings(store)

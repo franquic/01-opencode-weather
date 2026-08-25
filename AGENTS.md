@@ -13,6 +13,7 @@
 - `src/api.ts` — llamadas a OpenMeteo (geocoding + forecast).
 - `src/app.ts` — CLI, display, handlers y menú.
 - `src/colors.ts` — helpers de color ANSI (cyan/yellow/green/red), respeta `NO_COLOR`.
+- `src/wmo.ts` — mapa de códigos WMO → descripción en español (`describeWeatherCode`).
 - `src/types.ts` — interfaces TypeScript.
 
 ## App Purpose
@@ -32,3 +33,4 @@ bun run build         # compila binario (--compile --outfile weather)
 ## API Reference
 - Geocoding: `https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=es&format=json` (devuelve hasta 5 resultados; el usuario elige uno de una lista numerada cuando hay varios).
 - Forecast: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m&temperature_unit={celsius|fahrenheit}`
+- Predicción diaria: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=7&timezone=auto&temperature_unit={celsius|fahrenheit}`

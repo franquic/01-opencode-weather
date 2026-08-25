@@ -15,6 +15,19 @@ export interface WeatherData {
   unit: Unit
 }
 
+export interface ForecastDay {
+  date: string
+  tempMin: number
+  tempMax: number
+  weatherCode: number
+}
+
+export interface ForecastData {
+  city: string
+  unit: Unit
+  days: ForecastDay[]
+}
+
 export interface AppSettings {
   defaultCityId: string | null
   cities: City[]
