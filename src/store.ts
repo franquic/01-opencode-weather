@@ -1,10 +1,12 @@
-import type { AppSettings, City } from "./types"
+import { readFileSync, writeFileSync } from "node:fs"
+import type { AppSettings, City, Unit } from "./types"
 
 const STORAGE_PATH = `${process.cwd()}/cities.json`
 
 const DEFAULT_SETTINGS: AppSettings = {
   defaultCityId: null,
   cities: [],
+  unit: "celsius",
 }
 
 export class Store {
@@ -16,8 +18,8 @@ export class Store {
 
   private load(): AppSettings {
     try {
-      const file = Bun.file(STORAGE_PATH)
-      return JSON.parse(file.textSync()) as AppSettings
+      const parsed = JSON.parse(readFileSync(STORAGE_PATH, "utf8")) as Partial<AppSettings>
+      return { ...structuredClone(DEFAULT_SETTINGS), ...parsed }
     } catch {
       this.save(DEFAULT_SETTINGS)
       return structuredClone(DEFAULT_SETTINGS)
@@ -25,7 +27,7 @@ export class Store {
   }
 
   private save(settings: AppSettings): void {
-    Bun.write(STORAGE_PATH, JSON.stringify(settings, null, 2))
+    writeFileSync(STORAGE_PATH, JSON.stringify(settings, null, 2))
   }
 
   flush(): void {
@@ -38,6 +40,15 @@ export class Store {
 
   get defaultCityId(): string | null {
     return this.settings.defaultCityId
+  }
+
+  get unit(): Unit {
+    return this.settings.unit
+  }
+
+  setUnit(unit: Unit): void {
+    this.settings.unit = unit
+    this.save(this.settings)
   }
 
   addCity(name: string, latitude: number, longitude: number, id: string): void {

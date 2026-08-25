@@ -1,0 +1,18 @@
+{
+  "defaultCityId": "3f4b482c-973c-441e-9e0e-3b3e0f1e1f5e",
+  "cities": [
+    {
+      "id": "3f4b482c-973c-441e-9e0e-3b3e0f1e1f5e",
+      "name": "Madrid",
+      "latitude": 40.4165,
+      "longitude": -3.70256
+    },
+    {
+      "id": "0a062c14-83a5-45e5-b742-a5b6a5b20e08",
+      "name": "Lima",
+      "latitude": -12.04318,
+      "longitude": -77.02824
+    }
+  ],
+  "unit": "celsius"
+}

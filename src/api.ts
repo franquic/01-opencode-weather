@@ -1,4 +1,4 @@
-import type { City, WeatherData } from "./types"
+import type { City, Unit, WeatherData } from "./types"
 
 const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
@@ -25,11 +25,12 @@ export async function geocodeCity(name: string): Promise<City | null> {
   }
 }
 
-export async function getWeather(city: City): Promise<WeatherData | null> {
+export async function getWeather(city: City, unit: Unit = "celsius"): Promise<WeatherData | null> {
   const url = new URL(FORECAST_URL)
   url.searchParams.set("latitude", String(city.latitude))
   url.searchParams.set("longitude", String(city.longitude))
   url.searchParams.set("current", "temperature_2m")
+  url.searchParams.set("temperature_unit", unit)
 
   const res = await fetch(url.toString())
   if (!res.ok) return null
@@ -40,5 +41,6 @@ export async function getWeather(city: City): Promise<WeatherData | null> {
   return {
     city: city.name,
     temperature: data.current.temperature_2m,
+    unit,
   }
 }
