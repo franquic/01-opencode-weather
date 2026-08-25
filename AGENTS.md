@@ -6,29 +6,36 @@
 - See `bun-instructions.md` for full Bun conventions.
 
 ## Project Structure
-- Entry point: `index.ts` (root) — delegates to `src/app.ts`.
-- Source code: `src/` directory.
+- Entry point: `index.ts` (root) — delegates to `src/index.ts`.
+- Source code: `src/` directory, organized in layers (see `references/file-system.md`):
+  - `src/index.ts` — composition root: migrates storage, creates storages, builds the menu, starts the app.
+  - `src/actions/` — user-facing actions (one file per action). Each takes `ActionDeps` (`{ citiesStorage, settingsStorage }`) — dependencies are injected, never imported as singletons. Actions orchestrate but never do I/O directly.
+  - `src/presentation/` — console interaction: `menu.ts` (data-driven menu loop over `MenuOption[]`), `input.ts` (readline, `ask`, `selectCity`), `output.ts` (rendering and messages).
+  - `src/storage/` — local persistence: `citiesStorage.ts` (cities.json), `settingsStorage.ts` (settings.json), `migration.ts` (one-time migration from the legacy single-file store), `jsonFile.ts` (low-level JSON read/write). Write-through on every mutation.
+  - `src/api/` — OpenMeteo integration: `geocoding.ts`, `weather.ts`, `http.ts` (`fetchJson` helper).
+  - `src/types/` — shared TypeScript contracts: `City.ts`, `Weather.ts`, `AppSettings.ts`, `MenuOption.ts` (+ `index.ts` barrel).
+  - `src/utils/` — reusable helpers: `format.ts` (pure formatters), `constants.ts`, `colors.ts` (ANSI, respects `NO_COLOR`), `wmo.ts` (WMO code → Spanish description).
 - TypeScript with strict mode, `noEmit`, bundler module resolution (`tsconfig.json`).
-- `src/store.ts` — estado en memoria con persistencia eager (write-through en cada mutación) a `cities.json` en el cwd.
-- `src/api.ts` — llamadas a OpenMeteo (geocoding + forecast).
-- `src/app.ts` — CLI, display, handlers y menú.
-- `src/colors.ts` — helpers de color ANSI (cyan/yellow/green/red), respeta `NO_COLOR`.
-- `src/wmo.ts` — mapa de códigos WMO → descripción en español (`describeWeatherCode`).
-- `src/types.ts` — interfaces TypeScript.
 
 ## App Purpose
 - CLI weather app using OpenMeteo API (free, no API key required).
 - Two-step API flow: geocoding → forecast.
-- Supports temperature unit selection (°C/°F) persisted in settings.
-- Target: interactive menu with city management (see `README.md` for menu mockup).
-- Final deliverable: a compiled binary.
+- Temperature unit selection (°C/°F) persisted in settings.
+- Data files in the cwd: `cities.json` (array of cities) and `settings.json` (`defaultCityId`, `unit`).
 
 ## Commands
 ```
 bun index.ts          # run
 bun test              # run tests (uses bun:test)
-bun run build         # compila binario (--compile --outfile weather)
+bun run build         # compiles binary (--compile --outfile weather)
+bun x tsc --noEmit    # typecheck
 ```
+
+## Conventions
+- Actions receive deps by parameter (`ActionDeps`) — no global state, easy to test.
+- Presentation layer never calls the API directly; actions orchestrate between presentation, api and storage.
+- Adding a menu option = add an entry to `buildMenuOptions` in `src/index.ts` (no switch statements).
+- Cross-storage rules (e.g. resetting the default city after removal) live in the corresponding action.
 
 ## API Reference
 - Geocoding: `https://geocoding-api.open-meteo.com/v1/search?name={city}&count=5&language=es&format=json` (devuelve hasta 5 resultados; el usuario elige uno de una lista numerada cuando hay varios).
