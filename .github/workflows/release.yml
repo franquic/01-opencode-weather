@@ -88,7 +88,7 @@ jobs:
       - name: Rename binary
         run: |
           if [ "${{ matrix.os }}" = "windows" ]; then
-            mv weather "weather-${{ matrix.os }}-${{ matrix.arch }}.exe"
+            mv weather.exe "weather-${{ matrix.os }}-${{ matrix.arch }}.exe"
           else
             chmod +x weather
             mv weather "weather-${{ matrix.os }}-${{ matrix.arch }}"
